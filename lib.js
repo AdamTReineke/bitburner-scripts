@@ -8,7 +8,7 @@ export function format(n) {
 		return n.toFixed(3) + "  ";
 	}
 	var out = fixed(n);
-	while(out.length < 9) {
+	while(out.length < 10) {
 		out = " " + out;
 	}
 	return out;
