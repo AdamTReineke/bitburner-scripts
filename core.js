@@ -2,7 +2,6 @@ import { format, formatTime, pad } from "lib.js";
 /** @param {NS} ns **/
 export async function main(ns) {
     while(true) {
-        /*
         var targets = [
             { symbol: "", host: "fulcrumassets", hack: 1342 },
             { symbol: "ECP", host: "ecorp", hack: 1260 },
@@ -78,15 +77,16 @@ export async function main(ns) {
         }
 
         var target = targets[Math.floor(Math.random() * targets.length)];
-        */
-        var target = { symbol: "JGN", host: "joesguns", hack: 10 };
 
         var host = target.host;
 
         var moneyThresh = ns.getServerMaxMoney(host) * (0.5 + (Math.random() * 0.5));
         var securityThresh = ns.getServerMinSecurityLevel(host) + (5 * Math.random());
 
-        var forecast = target.symbol !== "" ? ns.stock.getForecast(target.symbol) : 0.5;
+        var forecast = 0.5;
+        try {
+            forecast = (target.symbol !== "") ? ns.stock.getForecast(target.symbol) : 0.5;
+        } catch (e) {}
 
         if (ns.getServerSecurityLevel(host) > securityThresh) {
             await ns.weaken(host);
