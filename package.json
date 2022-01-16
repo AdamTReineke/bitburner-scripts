@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/AdamTReineke/bitburner-scripts#readme",
   "devDependencies": {
+    "@types/jest": "^27.4.0",
     "jest": "^27.4.7"
   }
 }
