@@ -63,6 +63,9 @@ function symbolTick(ns, dict, SYM) {
         if(dict[SYM].bear === false) {
             ns.tprintf(`${(new Date()).toLocaleTimeString()},${SYM},BEAR,${bid}`);
             dict[SYM].actionPrice = ns.stock.getBidPrice(SYM);
+
+            // Sell everything
+            ns.stock.sell(SYM, ns.stock.getPosition(SYM)[0]);
         }
 
         dict[SYM].bear = true;
@@ -71,6 +74,13 @@ function symbolTick(ns, dict, SYM) {
         if(dict[SYM].bear === true) {
             ns.tprintf(`${(new Date()).toLocaleTimeString()},${SYM},BULL,${ask}`);
             dict[SYM].actionPrice = ns.stock.getAskPrice(SYM);
+
+            // Long only, no short.
+            var maxToSpend = Math.min(networth(ns) / 6, ns.getPlayer().money);
+            if(maxToSpend > 10_000_000) {
+                var sharesToBuy = Math.floor(maxToSpend / ns.stock.getAskPrice(SYM));
+                ns.stock.buy(SYM, sharesToBuy);
+            }
         }
         dict[SYM].bear = false;
     }
@@ -87,6 +97,19 @@ function symbolTick(ns, dict, SYM) {
         pad(format(deltaToNow), 10),
         pad(formatPercent((avgNow - dict[SYM].actionPrice) / dict[SYM].actionPrice), 10)
         );
+}
+
+/**
+ * 
+ * @param {NS} ns 
+ * @returns 
+ */
+function networth(ns) {
+    return ns.getPlayer().money + ns.stock.getSymbols().map(sym => {
+        var pos = ns.stock.getPosition(sym);
+        var sum = pos[0] * pos[1];
+        return sum;
+    }).reduce((pv, v) => pv + v);
 }
 
 /**
