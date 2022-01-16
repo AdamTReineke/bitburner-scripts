@@ -1,61 +1,92 @@
-import { format } from "./lib.js";
+import { format, formatPercent, pad } from "./lib.js";
+
+// Constants
+const Sec = 1000;
+const SLEEP_MS = 6 * Sec;
 
 /** @param {NS} ns **/
 export async function main(ns) {
-    const Sec = 1000;
-    const SYM = "JGN";
-    const SLEEP_MS = 6 * Sec;
+    // Disable logs
     ns.disableLog("sleep");
 
-    var bids = [ns.stock.getBidPrice(SYM)];
-    var asks = [ns.stock.getAskPrice(SYM)];
-    var bidDeltas = [0];
-    var askDeltas = [0];
-    var i = 0;
-    var bear = undefined;
+    // Initialize data
+    /**
+     * @type {Record<string, {bids: Array<number>, asks: Array<number>, bidDeltas: Array<number>, askDeltas: Array<number>, bear: true | false | undefined, actionPrice: number}>}
+     */
+    var dict = {};
+    var symbols = ns.stock.getSymbols().sort();
+    symbols.forEach((sym) => {
+        dict[sym] = {
+            bids: [ns.stock.getBidPrice(sym)],
+            asks: [ns.stock.getAskPrice(sym)],
+            bidDeltas: [0],
+            askDeltas: [0],
+            bear: undefined,
+            actionPrice: 0,
+        }
+    });
 
     while(true) {
-        var bid = ns.stock.getBidPrice(SYM);
-        var ask = ns.stock.getAskPrice(SYM);
-
-        var bidDelta = bid - bids[bids.length - 1];
-        var askDelta = ask - asks[asks.length - 1];
-
-        asks.push(ask);
-        bids.push(bid);
-        bidDeltas.push(bidDelta);
-        askDeltas.push(askDelta);
-
-        if (bids.length > ((5 * 60 * Sec) / SLEEP_MS)) {
-            asks.shift();
-            bids.shift();
-            bidDeltas.shift();
-            askDeltas.shift();
-        }
-
-        // Test for day trading
-        var bidDeltaCount = recent(bidDeltas);
-        if(bidDeltaCount > 10) {
-            if(bear === false) {
-                ns.tprint(`${(new Date()).toLocaleTimeString()} BEAR: ${format(bid)}`);
-            }
-            bear = true;
-        }
-        else if(bidDeltaCount < -4) {
-            if(bear === true) {
-                ns.tprint(`${(new Date()).toLocaleTimeString()} BULL: ${format(ask)}`);
-            }
-            bear = false;
-        }
-
-        // Market ticks...
-        ns.print(`BID: ${format(bid)} (${format(bidDelta)}), ASK ${format(ask)} (${format(askDelta)}) - recent bids: ${bidDeltaCount} positive`);
-        if(++i % 10 === 0) {
-            ns.tprint(`BID: ${format(bid)} (${format(bidDelta)}), ASK ${format(ask)} (${format(askDelta)}) - recent bids: ${bidDeltaCount} positive`);
-        }
-
+        symbols.forEach(sym => symbolTick(ns, dict, sym));
+        ns.print(`--------`);
         await ns.sleep(SLEEP_MS);
     }
+}
+
+/**
+ * @param {NS} ns
+ * @param {Record<string, {bids: Array<number>, asks: Array<number>, bidDeltas: Array<number>, askDeltas: Array<number>, bear: true | false | undefined, actionPrice: number}>} dict
+ * @param {string} SYM
+ */
+function symbolTick(ns, dict, SYM) {
+    var bid = ns.stock.getBidPrice(SYM);
+    var ask = ns.stock.getAskPrice(SYM);
+
+    var bidDelta = bid - dict[SYM].bids[dict[SYM].bids.length - 1];
+    var askDelta = ask - dict[SYM].asks[dict[SYM].asks.length - 1];
+
+    dict[SYM].asks.push(ask);
+    dict[SYM].bids.push(bid);
+    dict[SYM].bidDeltas.push(bidDelta);
+    dict[SYM].askDeltas.push(askDelta);
+
+    if (dict[SYM].bids.length > ((5 * 60 * Sec) / SLEEP_MS)) {
+        dict[SYM].asks.shift();
+        dict[SYM].bids.shift();
+        dict[SYM].bidDeltas.shift();
+        dict[SYM].askDeltas.shift();
+    }
+
+    // Test for day trading
+    var bidDeltaCount = recent(dict[SYM].bidDeltas);
+    if(bidDeltaCount > 10) {
+        if(dict[SYM].bear === false) {
+            ns.tprintf(`${(new Date()).toLocaleTimeString()},${SYM},BEAR,${bid}`);
+            dict[SYM].actionPrice = ns.stock.getBidPrice(SYM);
+        }
+
+        dict[SYM].bear = true;
+    }
+    else if(bidDeltaCount < -10) {
+        if(dict[SYM].bear === true) {
+            ns.tprintf(`${(new Date()).toLocaleTimeString()},${SYM},BULL,${ask}`);
+            dict[SYM].actionPrice = ns.stock.getAskPrice(SYM);
+        }
+        dict[SYM].bear = false;
+    }
+
+    var avgNow = (bid+ask) / 2;
+    var avgThen = (dict[SYM].asks[0] + dict[SYM].bids[0] ) / 2;
+    var deltaToNow = avgNow - avgThen;
+
+    ns.print(
+        pad(SYM, 6),
+        pad(dict[SYM].bear === true ? "BE  " : (dict[SYM].bear === false ? "  BU" : " -- "), 5),
+        pad(format(avgNow), 10),
+        pad(format(avgThen), 10),
+        pad(format(deltaToNow), 10),
+        pad(formatPercent((avgNow - dict[SYM].actionPrice) / dict[SYM].actionPrice), 10)
+        );
 }
 
 /**
