@@ -4,7 +4,8 @@
   "description": "A collection of scripts for the Bitburner idle game.",
   "type": "module",
   "scripts": {
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "install": "node  --experimental-vm-modules dev/getTypes.js"
   },
   "repository": {
     "type": "git",
