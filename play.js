@@ -30,8 +30,8 @@ export async function main(NS) {
 
 		case 'A':
 			ns.print(`STAGE: A`);
-			await buyServers("A", 2**6, 2**12);
 			await buyPrograms();
+			await buyServers("A", 2**6, 2**12);
 
 			await deploy();
 
