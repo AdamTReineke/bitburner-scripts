@@ -10,7 +10,7 @@ var THREADS_PER_PROCESS;
 /** @param {NS} NS **/
 export async function main(NS) {
 	ns = NS;
-	THREADS_PER_PROCESS = ns.getPlayer().hacking < 4000 ? Math.min(500, ns.getPlayer().hacking / 2) : 1500;
+	THREADS_PER_PROCESS = ns.getPlayer().hacking < 4000 ? Math.min(500, Math.max(ns.getPlayer().hacking / 2, 250)) : 1500;
 	totalThreads = 0;
 	totalProcs = 0;
 
