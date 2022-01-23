@@ -82,6 +82,13 @@ export async function main(NS) {
 			ns.print(`STAGE: D`);
 			await buyServers("D", 2**20);
 
+			// BETTER strat:
+			// Start trading immediately after C.
+			// Get total market size, wait for networth to equal 50% market.
+			// Redeploy jgn.js to maximize upgrading hacking skill.
+			// Buy max servers whenever networth is 50% market + 730m.
+			// Potential downside: market moves less?
+
 			ns.scriptKill("market.js", "home");
 			ns.exec("market.js", "home", 1, "trade");
 			ns.tprint("Servers maxxed, start trading!!!");
