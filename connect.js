@@ -27,9 +27,21 @@ export async function main(NS) {
 
 	scannedNames = [...scannedNames.values()];
 	if ([...scannedNames].indexOf(ns.args[0]) === -1) {
-		ns.tprint("Bad name, cannot connect.");
-		ns.tprint(scannedNames.join(","));
-		return;
+		ns.tprint("Possible servers:");
+		if(ns.args[0]) {
+			var matches = scannedNames.filter(v => v.startsWith(ns.args[0]));
+			if(matches.length === 1) {
+				ns.args[0] = matches[0];
+			}
+			else {
+				ns.tprint(scannedNames.filter(v => v.startsWith(ns.args[0])).join(", "));
+				return;
+			}
+		}
+		else {
+			ns.tprint(scannedNames.join(", "));
+			return;
+		}
 	}
 
 	//ns.tprint(JSON.stringify(scannedFromDict));
