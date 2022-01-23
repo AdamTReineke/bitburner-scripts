@@ -30,11 +30,11 @@ export async function main(NS) {
 	}
 
 	while(true) {
-		ns.clearLog();
 		// print details
 		table(details);
 		await ns.write("stock.txt", JSON.stringify(details), "w");
 		await ns.sleep(6000);
+		ns.clearLog();
 
 		// update
 		details.forEach(stock => {
@@ -42,17 +42,13 @@ export async function main(NS) {
 			stock.min = Math.min(ns.stock.getAskPrice(stock.symbol), stock.min);
 			stock.max = Math.max(ns.stock.getBidPrice(stock.symbol), stock.max);
 			stock.price = ns.stock.getPrice(stock.symbol);
+			stock.sharesLong = ns.stock.getPosition(stock.symbol)[0];
+			stock.sharesShort = ns.stock.getPosition(stock.symbol)[2];
 
 			if(trade) {
 
 				var position = ns.stock.getPosition(stock.symbol);
 				var isLong = position[0] > 0;
-				// var shouldSell = stock.max / ns.stock.getBidPrice(stock.symbol) <= 1.5;
-				// if (isLong
-				// && (
-				// 	(stock.forecast < 0.46)
-				// 	|| (shouldSell && stock.forecast < 0.52)
-				// )) {
 				if (isLong && stock.forecast < 0.50) {
 					var settled = ns.stock.sell(stock.symbol, position[0]);
 					if(settled > 0) {
@@ -62,8 +58,6 @@ export async function main(NS) {
 					return;
 				}
 
-				// var shouldBuy = stock.max / ns.stock.getAskPrice(stock.symbol) >= 1.5;
-				// if(!isLong && ((shouldBuy && stock.forecast > 0.52) || (stock.forecast >= 0.8))) {
 				if (!isLong && stock.forecast >= 0.55) {
 					var toBuy = Math.floor((ns.getPlayer().money - 100_000) / ns.stock.getAskPrice(stock.symbol));
 					var price = ns.stock.buy(stock.symbol, Math.min(toBuy, ns.stock.getMaxShares(stock.symbol)));
@@ -76,6 +70,13 @@ export async function main(NS) {
 
 			}
 		});
+
+		// print details
+		table(details);
+		await ns.write("stock.txt", JSON.stringify(details), "w");
+		await ns.sleep(6000);
+		ns.clearLog();
+		
 	}
 }
 
@@ -85,13 +86,10 @@ export async function main(NS) {
 function table(details) {
 	ns.print(
 		pad("Symbol", 8),
-		pad("Min", 10),
-		pad("Price", 10),
-		pad("Max", 10),
-		pad("Downside", 10),
-		pad("Upside", 10),
-		pad("Range", 13),
-		pad("Forecast", 10)
+		pad("Price", 11),
+		pad("Forecast", 10),
+		pad("Long Pct", 10),
+		pad("Short Pct", 10)
 	);
 
 	// alpha sort
@@ -102,24 +100,28 @@ function table(details) {
 
 	var sum = 0;
 	var costBasis = 0;
+	var totalMarket = 0;
 	details.forEach(item => {
 		sum += ns.stock.getPosition(item.symbol)[0] * ns.stock.getAskPrice(item.symbol);
 		costBasis += ns.stock.getPosition(item.symbol)[0] * ns.stock.getPosition(item.symbol)[1];
+		totalMarket += ns.stock.getBidPrice(item.symbol) * ns.stock.getMaxShares(item.symbol);
+
+		var posInd = ns.stock.getPosition(item.symbol)[0] > 0 ? "+ " :
+			ns.stock.getPosition(item.symbol)[2] > 0 ? "- " : "  ";
+
 		ns.print(
-			pad((ns.stock.getPosition(item.symbol)[0] > 0 ? "* " : "  ") + item.symbol, 8),
-			pad(format(item.min), 10),
-			pad(format(item.price), 10),
-			pad(format(item.max), 10),
-			pad(formatPercent(1 - (item.price / item.min)), 10),
-			pad(formatPercent((item.max / item.price) - 1), 10),
-			pad(getRange(item), 13),
-			pad(formatPercent(item.forecast), 10)
+			pad(posInd + item.symbol, 8),
+			pad(format(item.price), 11),
+			pad(formatPercent(item.forecast), 10),
+			pad(formatPercent(item.sharesLong / ns.stock.getMaxShares(item.symbol)), 10),
+			pad(formatPercent(item.sharesShort / ns.stock.getMaxShares(item.symbol)), 10)
 		);
 	});
 
-	ns.print(`  Open Positions: \$ ${format(sum)}`);
+	ns.print(`  Long Positions: \$ ${format(sum)}`);
 	ns.print(`      Cost Basis: \$ ${format(costBasis)}`);
 	ns.print(`Unrealized Gains: \$ ${format(sum - costBasis)}`);
+	ns.print(`    Total Market: \$ ${format(totalMarket)}`)
 }
 
 /**
