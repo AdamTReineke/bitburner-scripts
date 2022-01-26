@@ -150,7 +150,7 @@ async function buyServers(prefix, ram, nextRam) {
 	return Promise.resolve();
 }
 
-async function awaitMoney(n) {
+export async function awaitMoney(n, ns) {
 	var start = performance.now();
 	ns.scriptKill("money.js", "home");
 	ns.run("money.js", 1, n);
