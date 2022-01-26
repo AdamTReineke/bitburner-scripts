@@ -43,6 +43,7 @@ export async function main(ns) {
 
     ns.tprint("Done buying servers!");
 
+    ns.spawn("nf.js", 1);
 }
 
 /**
