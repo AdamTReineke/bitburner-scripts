@@ -77,6 +77,7 @@ export async function main(ns) {
         }
 
         var target = targets[Math.floor(Math.random() * targets.length)];
+        if(target === undefined) target = { symbol: "JGN", host: "joesguns", hack: 10 };
 
         var host = target.host;
 
