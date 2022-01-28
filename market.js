@@ -32,19 +32,30 @@ export async function main(ns) {
 			stock.price = ns.stock.getPrice(stock.symbol);
 			stock.sharesLong = ns.stock.getPosition(stock.symbol)[0];
 			stock.sharesShort = ns.stock.getPosition(stock.symbol)[2];
-
-			if(trade) {
-
+		});
+		
+		if(trade) {
+			// Sell any bad long positions
+			details.forEach(stock => {
 				var position = ns.stock.getPosition(stock.symbol);
 				var isLong = position[0] > 0;
 				if (isLong && stock.forecast < 0.50) {
 					var settled = ns.stock.sell(stock.symbol, position[0]);
 					if(settled > 0) {
-						
 						ns.print(`${new Date().toLocaleTimeString()} SOLD: ${stock.symbol} x ${format(position[0])} @ \$ ${format(settled)} = \$ ${format(settled * position[0])}, profitting \$ ${format(settled * position[0] - 200_000 - position[1] * position[0])}`);
+						stock.sharesLong -= position[0];
 					}
-					return;
 				}
+			});
+		}
+
+		// Require $10B to trade. Prevents tiny trades where the transaction cost might offset gains.
+		// Additionally creates a better spread of money across the market.
+		if(trade && ns.getPlayer().money > 10_000_000_000) {
+			// Buy long in order of best forecast
+			details.sort((a, b) => b.forecast - a.forecast).forEach((stock) => {
+				var position = ns.stock.getPosition(stock.symbol);
+				var isLong = position[0] > 0;
 
 				if (!isLong && stock.forecast >= 0.55) {
 					var toBuy = Math.floor((ns.getPlayer().money - 100_000) / ns.stock.getAskPrice(stock.symbol));
@@ -55,9 +66,9 @@ export async function main(ns) {
 					}
 					return;
 				}
+			});
+		}
 
-			}
-		});
 
 		// print details
 		table(ns, details, verbose);
