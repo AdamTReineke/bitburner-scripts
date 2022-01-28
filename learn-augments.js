@@ -18,6 +18,7 @@ export async function main(ns) {
         });
     }
 
+    // Pull out the faction names
     if(ns.args.includes("summary")) {
         var factionDict = {};
 
@@ -35,6 +36,7 @@ export async function main(ns) {
         ns.print(JSON.stringify(factionDict, undefined, 2));
     }
 
+    // Whole JSON object for debugging
     if(ns.args.includes("JSON")) {
         ns.print(JSON.stringify(setOfAugments, undefined, 2));
     }
