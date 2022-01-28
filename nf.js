@@ -1,4 +1,4 @@
-import { awaitMoney } from "./play.js";
+import { awaitMoney } from "./lib.js";
 
 /** @param {NS} ns **/
 export async function main(ns) {
