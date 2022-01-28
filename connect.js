@@ -25,6 +25,7 @@ export async function main(NS) {
 		}
 	}
 
+	// ADAM. What are you doing with types here? I'm sorry, me.
 	scannedNames = [...scannedNames.values()];
 	if ([...scannedNames].indexOf(ns.args[0]) === -1) {
 		ns.tprint("Possible servers:");
@@ -39,7 +40,7 @@ export async function main(NS) {
 			}
 		}
 		else {
-			ns.tprint(scannedNames.join(", "));
+			ns.tprint([...scannedNames].filter(host => !host.startsWith("AUTO-")).sort().join(", "));
 			return;
 		}
 	}
