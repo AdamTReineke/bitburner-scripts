@@ -44,3 +44,14 @@ export function pad(str, len) {
 	};
 	return "| " + str;
 }
+
+export async function awaitMoney(n, ns) {
+	var start = performance.now();
+	ns.scriptKill("money.js", "home");
+	ns.run("money.js", 1, n);
+	while(ns.getPlayer().money < n) {
+		ns.print(`Waiting for \$ ${format(n - ns.getPlayer().money)} more money... (${formatTime(performance.now() - start)} elapsed)`);
+		await ns.sleep(15000);
+	}
+	return Promise.resolve();
+}
