@@ -1,15 +1,10 @@
-import { format, formatTime } from 'lib.js';
+import { awaitMoney } from 'lib.js';
 import { univ } from "univ.js";
+import { buyPrograms } from "buy-programs.js";
 
-/** @type {NS} */
-var ns;
-
-/** @param {NS} NS **/
-export async function main(NS) {
-    ns = NS;
+/** @param {NS} ns **/
+export async function main(ns) {
 	ns.disableLog("sleep");
-
-	// Maybe add buying hacknet servers first?
 
 	/* '-' is charcode 45, vs ALPHA > 60 */
 	var stage = "-";
@@ -30,7 +25,7 @@ export async function main(NS) {
 
 		case 'A':
 			ns.print(`STAGE: A`);
-			await buyPrograms();
+			await buyPrograms(ns);
 			await buyServers("A", 2**6, 2**12);
 
 			await deploy();
@@ -106,29 +101,6 @@ export async function main(NS) {
 	}
 }
 
-async function buyPrograms() {
-	// buy darknet
-	await awaitMoney(200 * 10**3);
-	ns.purchaseTor();
-
-	// 500k
-	await awaitMoney(500 * 10**3);
-	ns.purchaseProgram("brutessh.exe");
-
-	// 1.5m
-	await awaitMoney(1.5 * 10**6)
-	ns.purchaseProgram("ftpcrack.exe");
-
-	// 5m
-	await awaitMoney(5 * 10**6);
-	ns.purchaseProgram("relaysmtp.exe");
-
-	// 30m
-	await awaitMoney(30 * 10**6);
-	ns.purchaseProgram("httpworm.exe");
-
-}
-
 async function buyServers(prefix, ram, nextRam) {
 	// Buy initial servers as money builds up
 	while(ns.getPurchasedServers().length < ns.getPurchasedServerLimit()) {
@@ -147,17 +119,6 @@ async function buyServers(prefix, ram, nextRam) {
 		await ns.sleep(prefix === "A" ? 3000 : 15000);
 	}
 
-	return Promise.resolve();
-}
-
-export async function awaitMoney(n, ns) {
-	var start = performance.now();
-	ns.scriptKill("money.js", "home");
-	ns.run("money.js", 1, n);
-	while(ns.getPlayer().money < n) {
-		ns.print(`Waiting for \$ ${format(n - ns.getPlayer().money)} more money... (${formatTime(performance.now() - start)} elapsed)`);
-		await ns.sleep(15000);
-	}
 	return Promise.resolve();
 }
 
