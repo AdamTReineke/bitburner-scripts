@@ -7,7 +7,37 @@ export async function main(ns) {
     var setOfAugments = {};
     buildSet(ns, setOfAugments);
 
-    ns.print(JSON.stringify(setOfAugments, undefined, 2));
+    // Filter to only unowned augments
+    if(ns.args.includes("unowned")) {
+        var pAug = ns.getOwnedAugmentations();
+        var owned = Object.keys(setOfAugments).filter(k => {
+            return pAug.includes(setOfAugments[k].name);
+        });
+        owned.forEach(augName => {
+            delete setOfAugments[augName];
+        });
+    }
+
+    if(ns.args.includes("summary")) {
+        var factionDict = {};
+
+        Object.keys(setOfAugments).forEach(augName => {
+            setOfAugments[augName].factionName.forEach(factionName => {
+                if(factionDict[factionName]) {
+                    factionDict[factionName].push(augName);
+                }
+                else {
+                    factionDict[factionName] = [augName];
+                }
+            });
+        });
+
+        ns.print(JSON.stringify(factionDict, undefined, 2));
+    }
+
+    if(ns.args.includes("JSON")) {
+        ns.print(JSON.stringify(setOfAugments, undefined, 2));
+    }
 }
 
 /**
@@ -21,7 +51,9 @@ function buildSet(ns, setOfAugments) {
             if(setOfAugments[augName] === undefined) {
                 populate(ns, setOfAugments, augName);
             }
-            setOfAugments[augName].factionName.push(faction);
+            if(setOfAugments[augName] !== undefined) {
+                setOfAugments[augName].factionName.push(faction);
+            }
         });
     });
 }
@@ -33,10 +65,17 @@ function buildSet(ns, setOfAugments) {
  * @param {string} augName 
  */
 function populate(ns, setOfAugments, augName) {
+    var stats = ns.getAugmentationStats(augName);
+    if(ns.args.includes("hacking")) {
+        if(!Object.keys(stats).join("").includes("hacking")) {
+            return;
+        }
+    }
+
     setOfAugments[augName] = {
         name: augName,
         factionName: [],
-        stats: ns.getAugmentationStats(augName),
+        stats: stats,
         prereq: ns.getAugmentationPrereq(augName),
         repReq: ns.getAugmentationRepReq(augName),
         price: ns.getAugmentationPrice(augName),
