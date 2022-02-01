@@ -39,11 +39,25 @@ export async function main(ns) {
 			details.forEach(stock => {
 				var position = ns.stock.getPosition(stock.symbol);
 				var isLong = position[0] > 0;
+				var isShort = position[2] > 0;
+
+				// Exit longs
 				if (isLong && stock.forecast < 0.50) {
 					var settled = ns.stock.sell(stock.symbol, position[0]);
 					if(settled > 0) {
-						ns.print(`${new Date().toLocaleTimeString()} SOLD: ${stock.symbol} x ${format(position[0])} @ \$ ${format(settled)} = \$ ${format(settled * position[0])}, profitting \$ ${format(settled * position[0] - 200_000 - position[1] * position[0])}`);
+						ns.print(`${new Date().toLocaleTimeString()} SOLD: ${stock.symbol} x ${format(position[0])} @ \$ ${format(settled)} = \$ ${format(settled * position[0])},`
+							+ ` profitting \$ ${format(settled * position[0] - 200_000 - position[1] * position[0])}`);
 						stock.sharesLong -= position[0];
+					}
+				}
+
+				// Exit shorts
+				if (isShort && stock.forecast > 0.5) {
+					var settled = ns.stock.sellShort(stock.symbol, position[2]);
+					if(settled > 0) {
+						ns.print(`${new Date().toLocaleTimeString()} SOLD SHORT: ${stock.symbol} x ${format(position[2])} @ \$ ${format(settled)} = \$ ${format(settled * position[2])},`
+							+ ` profitting \$ ${format(settled * position[2] - 200_000 - position[3] * position[2])}`);
+						stock.sharesShort -= position[3];
 					}
 				}
 			});
@@ -53,9 +67,12 @@ export async function main(ns) {
 		// Additionally creates a better spread of money across the market.
 		if(trade && ns.getPlayer().money > 10_000_000_000) {
 			// Buy long in order of best forecast
-			details.sort((a, b) => b.forecast - a.forecast).forEach((stock) => {
+			details.sort((a, b) => {
+				return Math.abs(0.5 - b.forecast) - Math.abs(0.5 - a.forecast);
+			}).forEach((stock) => {
 				var position = ns.stock.getPosition(stock.symbol);
 				var isLong = position[0] > 0;
+				var isShort = position[2] > 0;
 
 				if (!isLong && stock.forecast >= 0.55) {
 					var toBuy = Math.floor((ns.getPlayer().money - 100_000) / ns.stock.getAskPrice(stock.symbol));
@@ -63,6 +80,16 @@ export async function main(ns) {
 					var boughtQty = ns.stock.getPosition(stock.symbol)[0];
 					if(boughtQty > 0) {
 						ns.print(`${new Date().toLocaleTimeString()} BOUGHT ${stock.symbol} x ${format(boughtQty)} @ ${format(price)} = \$ ${format(price * boughtQty)}`);
+					}
+					return;
+				}
+
+				if (!isShort && stock.forecast <= 0.45) {
+					var toBuy = Math.floor((ns.getPlayer().money - 100_000) / ns.stock.getBidPrice(stock.symbol));
+					var price = ns.stock.short(stock.symbol, Math.min(toBuy, ns.stock.getMaxShares(stock.symbol)));
+					var boughtQty = ns.stock.getPosition(stock.symbol)[0];
+					if(boughtQty > 0) {
+						ns.print(`${new Date().toLocaleTimeString()} BOUGHT SHORT ${stock.symbol} x ${format(boughtQty)} @ ${format(price)} = \$ ${format(price * boughtQty)}`);
 					}
 					return;
 				}
@@ -101,8 +128,11 @@ function table(ns, details, verbose) {
 	var totalMarket = 0;
 	details.forEach(item => {
 		sum += ns.stock.getPosition(item.symbol)[0] * ns.stock.getAskPrice(item.symbol);
+		sum += ns.stock.getPosition(item.symbol)[2] * ns.stock.getBidPrice(item.symbol);
 		costBasis += ns.stock.getPosition(item.symbol)[0] * ns.stock.getPosition(item.symbol)[1];
+		costBasis += ns.stock.getPosition(item.symbol)[2] * ns.stock.getPosition(item.symbol)[3];
 		totalMarket += ns.stock.getBidPrice(item.symbol) * ns.stock.getMaxShares(item.symbol);
+
 
 		var posInd = ns.stock.getPosition(item.symbol)[0] > 0 ? "+ " :
 			ns.stock.getPosition(item.symbol)[2] > 0 ? "- " : "  ";
