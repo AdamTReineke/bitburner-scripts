@@ -63,9 +63,9 @@ export async function main(ns) {
 			});
 		}
 
-		// Require $10B to trade. Prevents tiny trades where the transaction cost might offset gains.
+		// Require $200M to trade. Prevents tiny trades where the transaction cost might offset gains.
 		// Additionally creates a better spread of money across the market.
-		if(trade && ns.getPlayer().money > 10_000_000_000) {
+		if(trade && ns.getPlayer().money > 200_000_000) {
 			// Buy long in order of best forecast
 			details.sort((a, b) => {
 				return Math.abs(0.5 - b.forecast) - Math.abs(0.5 - a.forecast);
@@ -153,5 +153,5 @@ function table(ns, details, verbose) {
 	ns.print(`  Long Positions: \$ ${format(long)} now, ${format(cbLong)} basis`);
 	ns.print(` Short Positions: \$ ${format(short)} now, ${format(cbShort)} basis`);
 	ns.print(`Unrealized Gains: \$ ${format((long - cbLong) + (cbShort - short))}`);
-	ns.print(`    Total Market: \$ ${format(totalMarket)}`);
+	ns.print(`    Total Market: \$ ${format(totalMarket)} (${formatPercent((long + short) / totalMarket)} owned)`);
 }
