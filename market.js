@@ -123,14 +123,16 @@ function table(ns, details, verbose) {
 	// upside sort
 	details.sort((a, b) => b.forecast - a.forecast );
 
-	var sum = 0;
-	var costBasis = 0;
+	var long = 0;
+	var short = 0;
+	var cbLong = 0;
+	var cbShort = 0;
 	var totalMarket = 0;
 	details.forEach(item => {
-		sum += ns.stock.getPosition(item.symbol)[0] * ns.stock.getAskPrice(item.symbol);
-		sum += ns.stock.getPosition(item.symbol)[2] * ns.stock.getBidPrice(item.symbol);
-		costBasis += ns.stock.getPosition(item.symbol)[0] * ns.stock.getPosition(item.symbol)[1];
-		costBasis += ns.stock.getPosition(item.symbol)[2] * ns.stock.getPosition(item.symbol)[3];
+		long += ns.stock.getPosition(item.symbol)[0] * ns.stock.getAskPrice(item.symbol);
+		short += ns.stock.getPosition(item.symbol)[2] * ns.stock.getAskPrice(item.symbol);
+		cbLong += ns.stock.getPosition(item.symbol)[0] * ns.stock.getPosition(item.symbol)[1];
+		cbShort += ns.stock.getPosition(item.symbol)[2] * ns.stock.getPosition(item.symbol)[3];
 		totalMarket += ns.stock.getBidPrice(item.symbol) * ns.stock.getMaxShares(item.symbol);
 
 
@@ -148,8 +150,8 @@ function table(ns, details, verbose) {
 		}
 	});
 
-	ns.print(`  Long Positions: \$ ${format(sum)}`);
-	ns.print(`      Cost Basis: \$ ${format(costBasis)}`);
-	ns.print(`Unrealized Gains: \$ ${format(sum - costBasis)}`);
-	ns.print(`    Total Market: \$ ${format(totalMarket)}`)
+	ns.print(`  Long Positions: \$ ${format(long)} now, ${format(cbLong)} basis`);
+	ns.print(` Short Positions: \$ ${format(short)} now, ${format(cbShort)} basis`);
+	ns.print(`Unrealized Gains: \$ ${format((long - cbLong) + (cbShort - short))}`);
+	ns.print(`    Total Market: \$ ${format(totalMarket)}`);
 }
