@@ -36,7 +36,7 @@ export async function main(ns) {
     const data = ns.codingcontract.getData("${file}", "${host}");
     const answer = solve(data);
     ns.print(answer);
-    if(answer !== undefined && ns.args.contains("submit")) {
+    if(answer !== undefined && ns.args.indexOf("submit") !== -1) {
         ns.codingcontract.attempt(answer, "${file}", "${host}", { returnReward: true });
     }
 }
