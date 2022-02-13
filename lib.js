@@ -1,4 +1,5 @@
 export function format(n) {
+	if(n === 0) return "";
 	function fixed(n) {
 		if(Math.abs(n) >= Math.pow(10, 15)) return (n / Math.pow(10,15)).toFixed(3) + " Q";
 		if(Math.abs(n) >= Math.pow(10, 12)) return (n / Math.pow(10,12)).toFixed(3) + " T";
@@ -23,12 +24,20 @@ export function formatTime(ms) {
 }
 
 export function formatPercent(n) {
+	if(n === 0) return "";
+
 	if(n > 99.999)
 		n = 99.999;
 	if(n < -99.999)
 		n = -99.999;
 
-	return (n * 100).toFixed(1) + "%";
+	var pct = (n * 100).toFixed(1) + "%";
+
+	while(pct.length < "-999.9%".length) {
+		pct = " " + pct;
+	}
+
+	return pct;
 }
 
 export function pad(str, len) {
