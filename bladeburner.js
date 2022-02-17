@@ -19,6 +19,8 @@ function readable(n) {
         case 5: return "Incite";
     }
 }
+const PRIMARY_TYPE = "Operations";
+const PRIMARY_NAME = "Stealth Retirement Operation";
 
 /** @param {NS} ns **/
 export async function main(ns) {
@@ -35,10 +37,12 @@ export async function main(ns) {
             changeState(ns, nextState);
         }
 
-        // Spend points
-        var cost = ns.bladeburner.getSkillUpgradeCost("Short-Circuit");
+        // Spend points - pick randomly each tick. Should level mostly equally.
+        var options = ["Reaper", "Blade's Intuition", "Cloak", "Short-Circuit", "Digital Observer", "Hyperdrive"];
+        var toBuy = options[Math.floor(Math.random() * options.length)];
+        var cost = ns.bladeburner.getSkillUpgradeCost(toBuy);
         if(ns.bladeburner.getSkillPoints() >= cost) {
-            ns.bladeburner.upgradeSkill("Short-Circuit");
+            ns.bladeburner.upgradeSkill(toBuy);
         }
 
         await ns.sleep(500);
@@ -69,7 +73,7 @@ function getNextState(ns, state) {
     }
 
     // 3rd - Get more contracts if we need them. Stamina will regen during this.
-    var needContracts = ns.bladeburner.getActionCountRemaining("Contracts", "Tracking") < 5;
+    var needContracts = ns.bladeburner.getActionCountRemaining(PRIMARY_TYPE, PRIMARY_NAME) < 5;
     if (needContracts) {
         return STATE.INCITE;
     }
@@ -125,7 +129,7 @@ function changeState(ns, nextState) {
             ns.bladeburner.startAction("General", HEALING_OP);
             break;
         case STATE.CONTRACT:
-            ns.bladeburner.startAction("Contracts", "Tracking");
+            ns.bladeburner.startAction(PRIMARY_TYPE, PRIMARY_NAME);
             return;
         case STATE.CALM:
             ns.bladeburner.startAction("General", "Diplomacy");
