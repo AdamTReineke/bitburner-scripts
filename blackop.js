@@ -4,12 +4,14 @@ export async function main(ns) {
 
     while(true) {
         var allBlackOps = ns.bladeburner.getBlackOpNames();
-        var nextOp = allBlackOps.filter(name => ns.bladeburner.getActionCountRemaining("BlackOps", name) > 0)[0];
+        var nextOp = allBlackOps.filter(name => ns.bladeburner.getActionCountRemaining("BlackOp", name) > 0)[0];
 
-        let isBlackOpsNow = ns.bladeburner.getCurrentAction().type === "BlackOps";
-        let expectMinimalSuccess = ns.bladeburner.getActionEstimatedSuccessChance("BlackOps", nextOp)[0] > 0.1;
+        let isBlackOpsNow = ns.bladeburner.getCurrentAction().type === "BlackOp";
+        let expectMinimalSuccess = ns.bladeburner.getActionEstimatedSuccessChance("BlackOp", nextOp)[0] > 0.25;
         if(!isBlackOpsNow && expectMinimalSuccess) {
-            ns.bladeburner.startAction("BlackOps", nextOp);
+            ns.print(new Date().toLocaleTimeString());
+            ns.print(`${allBlackOps.filter(name => ns.bladeburner.getActionCountRemaining("BlackOp", name) > 0).length} BlackOp remaining.`);
+            ns.bladeburner.startAction("BlackOp", nextOp);
         }
 
         await ns.sleep(30_000);
