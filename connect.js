@@ -15,6 +15,7 @@ export async function main(ns) {
 	if (matches.length > 1) {
 		ns.tprintf(`Found ${matches.length}:`);
 		ns.tprintf(matches
+			.sort((a, b) => a.toLocaleLowerCase().localeCompare(b.toLocaleLowerCase()))
 			.filter(host => !host.startsWith("AUTO-"))
 			.join(", ")
 		);
