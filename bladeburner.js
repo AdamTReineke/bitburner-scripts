@@ -38,7 +38,8 @@ export async function main(ns) {
         }
 
         // Spend points - pick randomly each tick. Should level mostly equally.
-        var options = ["Reaper", "Blade's Intuition", "Cloak", "Short-Circuit", "Digital Observer", "Hyperdrive"];
+        //var options = ["Reaper", "Blade's Intuition", "Cloak", "Short-Circuit", "Digital Observer", "Hyperdrive"];
+        var options = ["Overclock", "Evasive System", "Cyber's Edge"];
         var toBuy = options[Math.floor(Math.random() * options.length)];
         var cost = ns.bladeburner.getSkillUpgradeCost(toBuy);
         if(ns.bladeburner.getSkillPoints() >= cost) {
