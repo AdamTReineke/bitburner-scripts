@@ -55,6 +55,7 @@ async function smash(host) {
 	if(!host.hasRoot)
 		getRoot(host);
 
+	var now = performance.now();
 	if(host.hasRoot) {
 		if(host.host !== "home") {
 			ns.killall(host.host);
@@ -81,6 +82,9 @@ async function smash(host) {
 			while(ns.exec(fileToRun, host.host, THREADS_PER_PROCESS, ...ags, Math.random()) > 0) {
 				totalThreads += THREADS_PER_PROCESS;
 				totalProcs++;
+				if(performance.now() - now > 100) {
+					await ns.sleep(100);
+				}
 			}
 		}
 
