@@ -5,16 +5,39 @@ export async function main(ns) {
     // Disable logs
     ns.disableLog("ALL");
 
+    // Instructions
+    if (ns.args[0] === "help") {
+        ns.tprint(`Usage: run faction.js <FACTION> <JOB>`);
+        return;
+    }
+
     if (ns.args.length === 0) {
         throw new Error("First arg should be the faction name.");
     }
-    var faction = "" + ns.args[0];
+    const FACTION = "" + ns.args[0];
+    const JOB = "" + (ns.args[1] || "Hacking Contracts");
 
-    var existingFavor = ns.getFactionFavor(faction);
+
+    var existingFavor = ns.getFactionFavor(FACTION);
     while(true) {
-        var augFavor = ns.getFactionFavorGain(faction) + existingFavor;
+        var factionAugs = ns.getAugmentationsFromFaction(FACTION).filter(augName => {
+            // only include unowned and unpurchased augments
+            return ns.getOwnedAugmentations(true).indexOf(augName) === -1;
+        });
+        var maxRep = 0;
+        var augCosts = factionAugs.map((aug) => {
+            var rep = ns.getAugmentationRepReq(aug);
+            maxRep = Math.max(maxRep, rep);
+            return rep;
+        }).sort();
+
+        var augFavor = ns.getFactionFavorGain(FACTION) + existingFavor;
         
-        var msg = `You will have ${format(augFavor)} favor with ${faction} after installing augments.`;
+        var totalAugs = augCosts.length;
+        var augsLeft = augCosts.filter((price) => price > ns.getFactionRep(FACTION)).length;
+
+        var msg = `You will have ${format(augFavor)} favor with ${FACTION} after installing augments.\n`;
+        msg += `You have ${augsLeft} to earn rep for. Most expensive is ${format(maxRep)} rep.`;
         if(augFavor >= 150) {
             ns.tprint(msg);
             break;
@@ -23,25 +46,33 @@ export async function main(ns) {
             ns.print(msg);
         }
 
-        ns.workForFaction(faction, "Hacking Contracts", true);
+        ns.workForFaction(FACTION, JOB, true);
 
-        var before = ns.getFactionRep(faction);
+        var before = ns.getFactionRep(FACTION);
         await ns.sleep(60000);
         ns.stopAction();
 
-        var after = ns.getFactionRep(faction);
-        augFavor = ns.getFactionFavorGain(faction) + existingFavor;
+        var after = ns.getFactionRep(FACTION);
+        augFavor = ns.getFactionFavorGain(FACTION) + existingFavor;
 
         var repPerMinute = after - before;
         var repTo150 = favorToRep(150);
         var repAlready = favorToRep(augFavor);
-        var minutesRemaining = (repTo150 - repAlready) / repPerMinute;
+        var minutesRemainingFavor = (repTo150 - repAlready) / repPerMinute;
+        var minutesRemainingAugs = (maxRep - ns.getFactionRep(FACTION)) / repPerMinute;
 
+        ns.print(`Earning rep at ${format(repPerMinute)}/m.`);
         ns.print(
-            `You need ${format(repTo150 - repAlready)} more rep, `,
-            `earning ${format(repPerMinute)}/m. `,
-            `${format(minutesRemaining)} minutes remaining. `,
-            `ETA: ${new Date(new Date().setMinutes(new Date().getMinutes() + minutesRemaining)).toLocaleTimeString()}`);
+            `150 FAVOR: `,
+            (minutesRemainingFavor < 120) ? `${format(minutesRemainingFavor)} minutes remaining. ` : `${format(minutesRemainingFavor / 60)} hours remaining. `,
+            `ETA: ${new Date(new Date().setMinutes(new Date().getMinutes() + minutesRemainingFavor)).toLocaleTimeString()}`
+        );
+        ns.print(
+            `AUG REP: `,
+            (minutesRemainingAugs < 120) ? `${format(minutesRemainingAugs)} minutes remaining. ` : `${format(minutesRemainingAugs / 60)} hours remaining. `,
+            `ETA: ${new Date(new Date().setMinutes(new Date().getMinutes() + minutesRemainingAugs)).toLocaleTimeString()}. `,
+            `Rep to earn: ${format(maxRep - ns.getFactionRep(FACTION))}`,
+        );
     }
 }
 
