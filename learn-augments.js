@@ -1,5 +1,6 @@
 /** @param {NS} ns **/
 export async function main(ns) {
+    ns.clearLog();
     /**
      * Dictionary of augments where the key is the augmentation name and the value is the factions that offer it.
      * @type {Record<string, Augment>}
@@ -9,7 +10,7 @@ export async function main(ns) {
 
     // Filter to only unowned augments
     if(ns.args.includes("unowned")) {
-        var pAug = ns.getOwnedAugmentations();
+        var pAug = ns.getOwnedAugmentations(true);
         var owned = Object.keys(setOfAugments).filter(k => {
             return pAug.includes(setOfAugments[k].name);
         });
@@ -50,6 +51,11 @@ function buildSet(ns, setOfAugments) {
     // Populate all augments and the factions that provide them
     getListOfFactions().forEach((faction) => {
         ns.getAugmentationsFromFaction(faction).forEach(augName => {
+            // Skip NF. It's always everywhere.
+            if(augName === "NeuroFlux Governor") {
+                return;
+            }
+
             if(setOfAugments[augName] === undefined) {
                 populate(ns, setOfAugments, augName);
             }
@@ -68,8 +74,19 @@ function buildSet(ns, setOfAugments) {
  */
 function populate(ns, setOfAugments, augName) {
     var stats = ns.getAugmentationStats(augName);
+    var statsAsString = Object.keys(stats).join("");
     if(ns.args.includes("hacking")) {
-        if(!Object.keys(stats).join("").includes("hacking")) {
+        if(!statsAsString.includes("hacking")) {
+            return;
+        }
+    }
+    if(ns.args.includes("crime")) {
+        if(false === (
+            statsAsString.includes("strength")
+            || statsAsString.includes("defense")
+            || statsAsString.includes("dexterity")
+            || statsAsString.includes("agility")
+        )) {
             return;
         }
     }
