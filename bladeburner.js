@@ -19,8 +19,8 @@ function readable(n) {
         case 5: return "Incite";
     }
 }
-const PRIMARY_TYPE = "Operations";
-const PRIMARY_NAME = "Stealth Retirement Operation";
+const PRIMARY_TYPE = "Contracts";
+const PRIMARY_NAME = "Bounty Hunter";
 
 /** @param {NS} ns **/
 export async function main(ns) {
@@ -39,7 +39,8 @@ export async function main(ns) {
 
         // Spend points - pick randomly each tick. Should level mostly equally.
         //var options = ["Reaper", "Blade's Intuition", "Cloak", "Short-Circuit", "Digital Observer", "Hyperdrive"];
-        var options = ["Overclock", "Evasive System", "Cyber's Edge"];
+        //var options = ["Overclock", "Evasive System", "Cyber's Edge"];
+        var options = ["Hyperdrive", "Evasive System", "Cyber's Edge", "Reaper"];
         var toBuy = options[Math.floor(Math.random() * options.length)];
         var cost = ns.bladeburner.getSkillUpgradeCost(toBuy);
         if(ns.bladeburner.getSkillPoints() >= cost) {
@@ -73,6 +74,8 @@ function getNextState(ns, state) {
         return STATE.CALM;
     }
 
+    //ns.print(JSON.stringify({shouldHeal, shouldRest, fullyHealed, fullyRested, isCityPeaceful, isCityCrazy }));
+
     // 3rd - Get more contracts if we need them. Stamina will regen during this.
     var needContracts = ns.bladeburner.getActionCountRemaining(PRIMARY_TYPE, PRIMARY_NAME) < 5;
     if (needContracts) {
@@ -84,9 +87,8 @@ function getNextState(ns, state) {
         return STATE.TRAIN;
     }
 
-    // Stop healing when we're full
-    // Resume contracts.
-    if (state === STATE.IDLE || (fullyHealed && fullyRested && isCityPeaceful)) {
+    // Stop resting/calming/whatever when we're good enough and resume primary activity.
+    if (state === STATE.IDLE || fullyRested) {
         return STATE.CONTRACT;
     }
 
