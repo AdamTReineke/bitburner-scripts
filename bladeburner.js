@@ -20,7 +20,45 @@ function readable(n) {
     }
 }
 const PRIMARY_TYPE = "Contracts";
-const PRIMARY_NAME = "Bounty Hunter";
+const PRIMARY_NAME = "Tracking";
+
+/** @param {NS} ns **/
+function getOptions(ns) {
+    var rank = ns.bladeburner.getRank();
+    if(rank < 10_000) {
+        return [
+            "Hyperdrive", // Each level of this skill increases the experience earned from Contracts, Operations, and BlackOps by 10%
+            "Cyber's Edge", // Each level of this skill increases your max stamina by 2%
+            "Blade's Intuition", // Each level of this skill increases your success chance for all Contracts, Operations, and BlackOps by 3%
+            "Tracer", // Each level of this skill increases your success chance in all Contracts by 4%,
+        ];
+    }
+    /*
+    if(rank < 25_000) {
+
+    }
+    if(rank < 100_000) {
+
+    }
+    if(rank < 250_000)
+    */
+
+    // Late game - level them all.
+    return [
+        "Blade's Intuition", // Each level of this skill increases your success chance for all Contracts, Operations, and BlackOps by 3%
+        "Cloak", // Each level of this skill increases your success chance in stealth-related Contracts, Operations, and BlackOps by 5.5%
+        "Short-Circuit", // Each level of this skill increases your success chance in Contracts, Operations, and BlackOps that involve retirement by 5.5%
+        "Digital Observer", // Each level of this skill increases your success chance in all Operations and BlackOps by 4%
+        "Tracer", // Each level of this skill increases your success chance in all Contracts by 4%
+        "Overclock", // Each level of this skill decreases the time it takes to attempt a Contract, Operation, and BlackOp by 1% (Max Level: 90)
+        "Reaper", // Each level of this skill increases your effective combat stats for Bladeburner actions by 2%
+        "Evasive System", // Each level of this skill increases your effective dexterity and agility for Bladeburner actions by 4%
+        "Datamancer", // Each level of this skill increases your effectiveness in synthoid population analysis and investigation by 5%. This affects all actions that can potentially increase the accuracy of your synthoid population/community estimates.
+        "Cyber's Edge", // Each level of this skill increases your max stamina by 2%
+        "Hands of Midas", // Each level of this skill increases the amount of money you receive from Contracts by 10%
+        "Hyperdrive", // Each level of this skill increases the experience earned from Contracts, Operations, and BlackOps by 10%
+    ];
+}
 
 /** @param {NS} ns **/
 export async function main(ns) {
@@ -38,9 +76,7 @@ export async function main(ns) {
         }
 
         // Spend points - pick randomly each tick. Should level mostly equally.
-        //var options = ["Reaper", "Blade's Intuition", "Cloak", "Short-Circuit", "Digital Observer", "Hyperdrive"];
-        //var options = ["Overclock", "Evasive System", "Cyber's Edge"];
-        var options = ["Hyperdrive", "Evasive System", "Cyber's Edge", "Reaper"];
+        var options = getOptions(ns);
         var toBuy = options[Math.floor(Math.random() * options.length)];
         var cost = ns.bladeburner.getSkillUpgradeCost(toBuy);
         if(ns.bladeburner.getSkillPoints() >= cost) {
@@ -67,8 +103,8 @@ function getNextState(ns, state) {
 
     // 2nd - Calm the city. Should prevent runaway chaos.
     // RIP my chaos on 2/13: 9,371,617,329,222,234,000
-    var isCityCrazy = !chaosBelow(ns, 8);
-    var isCityPeaceful = chaosBelow(ns, 3);
+    var isCityCrazy = !chaosBelow(ns, getChaosLimits(ns).max);
+    var isCityPeaceful = chaosBelow(ns, getChaosLimits(ns).max);
     var keepCalming = state == STATE.CALM && !isCityPeaceful;
     if (isCityCrazy || keepCalming) {
         return STATE.CALM;
@@ -201,4 +237,23 @@ function isCalming(ns) {
 function isInciting(ns) {
     let { name, type } = ns.bladeburner.getCurrentAction();
     return type === "General" && name === "Incite Violence";
+}
+
+/**
+ * Chaos limit is scaled by player strength.
+ * @param {NS} ns
+ */
+function getChaosLimits(ns) {
+    return {
+        min: 1 * (getMinCombatSkill(ns) / 10),
+        max: 50 * (getMinCombatSkill(ns) / 10)
+    };
+}
+
+/**
+ * Get the player's min combat skill
+ * @param {NS} ns
+ */
+function getMinCombatSkill(ns) {
+    return Math.min(ns.getPlayer().strength, Math.min(ns.getPlayer().defense, Math.min(ns.getPlayer().dexterity, ns.getPlayer().agility)));
 }
