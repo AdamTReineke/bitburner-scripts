@@ -246,7 +246,7 @@ function isInciting(ns) {
 function getChaosLimits(ns) {
     return {
         min: 1 * (getMinCombatSkill(ns) / 10),
-        max: 50 * (getMinCombatSkill(ns) / 10)
+        max: 5 * (getMinCombatSkill(ns) / 10)
     };
 }
 
