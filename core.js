@@ -3,6 +3,7 @@ import { format, formatTime, pad } from "lib.js";
 export async function main(ns) {
     while(true) {
         var targets = [
+            /*
             { symbol: "", host: "fulcrumassets", hack: 1342 },
             { symbol: "ECP", host: "ecorp", hack: 1260 },
             { symbol: "FLCM", host: "fulcrumtech", hack: 1125 },
@@ -66,6 +67,7 @@ export async function main(ns) {
             { symbol: "SGC", host: "sigma-cosmetics", hack: 5 },
             { symbol: "", host: "n00dles", hack: 1 },
             { symbol: "", host: "foodnstuff", hack: 1 },
+            */
         ].filter(h => {
             return h.hack < ns.getPlayer().hacking * 0.5 && ns.hasRootAccess(h.host)
         });

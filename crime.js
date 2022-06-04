@@ -22,6 +22,8 @@ export async function main(ns) {
 	if(isVerbose) {
 		ns.print(
 			pad("Crime", crimeWidth),
+			pad("Karma", 10),
+			pad("Time", 10),
 			pad("Hack Wght / XP", 20),
 			pad("Strength Wght / XP", 20),
 			pad("Defense Wght / XP", 20),
@@ -41,6 +43,8 @@ export async function main(ns) {
 		if(isVerbose) {
 			ns.print(
 				pad(c, crimeWidth),
+				pad(crimeDetails[c].karma, 10),
+				pad(crimeDetails[c].karma / crimeDetails[c].time, 10),
 				pad(formatPercent(crimeDetails[c].hacking_success_weight), 8),
 				pad(format(crimeDetails[c].hacking_exp), 10),
 				pad(formatPercent(crimeDetails[c].strength_success_weight), 8),

@@ -10,7 +10,9 @@ var THREADS_PER_PROCESS;
 /** @param {NS} NS **/
 export async function main(NS) {
 	ns = NS;
-	THREADS_PER_PROCESS = ns.getPlayer().hacking < 4000 ? Math.min(500, Math.max(ns.getPlayer().hacking / 2, 250)) : 1500;
+	//THREADS_PER_PROCESS = ns.getPlayer().hacking < 4000 ? Math.min(500, Math.max(ns.getPlayer().hacking / 2, 250)) : 1500;
+	THREADS_PER_PROCESS = 50000;
+	
 	totalThreads = 0;
 	totalProcs = 0;
 
@@ -60,6 +62,10 @@ async function smash(host) {
 		if(host.host !== "home") {
 			ns.killall(host.host);
 		}
+		if(host.host.indexOf("hacknet-node") === 0) {
+			return;
+		}
+
 		await ns.scp("lib.js", "home", host.host);
 		await ns.scp(fileToRun, "home", host.host);
 		
@@ -83,7 +89,7 @@ async function smash(host) {
 				totalThreads += THREADS_PER_PROCESS;
 				totalProcs++;
 				if(performance.now() - now > 100) {
-					await ns.sleep(100);
+					await ns.sleep(30);
 				}
 			}
 		}

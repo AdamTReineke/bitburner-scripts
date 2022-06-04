@@ -2,7 +2,7 @@ import { awaitMoney } from "lib.js";
 
 /** @param {NS} ns **/
 export async function main(ns) {
-	buyPrograms(ns);
+	await buyPrograms(ns);
 }
 
 /**

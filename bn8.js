@@ -1,128 +1,59 @@
-import { format, formatPercent, pad } from "./lib.js";
-
-// Constants
-const Sec = 1000;
-const SLEEP_MS = 6 * Sec;
+import { format } from "lib.js";
 
 /** @param {NS} ns **/
 export async function main(ns) {
-    // Disable logs
+    const Sec = 1000;
+    const SYM = "JGN";
+    const SLEEP_MS = 6 * Sec;
     ns.disableLog("sleep");
 
-    // Initialize data
-    /**
-     * @type {Record<string, {bids: Array<number>, asks: Array<number>, bidDeltas: Array<number>, askDeltas: Array<number>, bear: true | false | undefined, actionPrice: number}>}
-     */
-    var dict = {};
-    var symbols = ns.stock.getSymbols().sort();
-    symbols.forEach((sym) => {
-        dict[sym] = {
-            bids: [ns.stock.getBidPrice(sym)],
-            asks: [ns.stock.getAskPrice(sym)],
-            bidDeltas: [0],
-            askDeltas: [0],
-            bear: undefined,
-            actionPrice: 0,
-        }
-    });
+    var bids = [ns.stock.getBidPrice(SYM)];
+    var asks = [ns.stock.getAskPrice(SYM)];
+    var bidDeltas = [0];
+    var askDeltas = [0];
+    var i = 0;
+    var bear = undefined;
 
     while(true) {
-        symbols.forEach(sym => symbolTick(ns, dict, sym));
-        ns.print(`--------`);
+        var bid = ns.stock.getBidPrice(SYM);
+        var ask = ns.stock.getAskPrice(SYM);
+
+        var bidDelta = bid - bids[bids.length - 1];
+        var askDelta = ask - asks[asks.length - 1];
+
+        asks.push(ask);
+        bids.push(bid);
+        bidDeltas.push(bidDelta);
+        askDeltas.push(askDelta);
+
+        if (bids.length > ((15 * 60 * Sec) / SLEEP_MS)) {
+            asks.shift();
+            bids.shift();
+            bidDeltas.shift();
+            askDeltas.shift();
+        }
+
+        // Test for day trading
+        var n = bidDeltas.length;
+        if(n > 4 && bidDeltas[n-1] < 0 && bidDeltas[n-2] < 0 && bidDeltas[n-3] < 0 && bidDeltas[n-4] < 0) {
+            if(bear !== true) {
+                ns.tprint(`BEAR: ${format(bid)}`);
+            }
+            bear = true;
+        }
+        if(n > 4 && askDeltas[n-1] > 0 && askDeltas[n-2] > 0 && askDeltas[n-3] > 0 && askDeltas[n-4] > 0) {
+            if(bear !== false) {
+                ns.tprint(`BULL: ${format(ask)}`);
+            }
+            bear = false;
+        }
+
+        // Market ticks...
+        ns.print(`BID: ${format(bid)} (${format(bidDelta)}), ASK ${format(ask)} (${format(askDelta)}) - recent bids: ${bidDeltas.filter(n => n > 0).length - bidDeltas.filter(n => n < 0).length} positive`);
+        if(++i % 10 === 0) {
+            ns.tprint(`BID: ${format(bid)} (${format(bidDelta)}), ASK ${format(ask)} (${format(askDelta)}) - recent bids: ${bidDeltas.filter(n => n > 0).length - bidDeltas.filter(n => n < 0).length} positive`);
+        }
+
         await ns.sleep(SLEEP_MS);
     }
-}
-
-/**
- * @param {NS} ns
- * @param {Record<string, {bids: Array<number>, asks: Array<number>, bidDeltas: Array<number>, askDeltas: Array<number>, bear: true | false | undefined, actionPrice: number}>} dict
- * @param {string} SYM
- */
-function symbolTick(ns, dict, SYM) {
-    var bid = ns.stock.getBidPrice(SYM);
-    var ask = ns.stock.getAskPrice(SYM);
-
-    var bidDelta = bid - dict[SYM].bids[dict[SYM].bids.length - 1];
-    var askDelta = ask - dict[SYM].asks[dict[SYM].asks.length - 1];
-
-    dict[SYM].asks.push(ask);
-    dict[SYM].bids.push(bid);
-    dict[SYM].bidDeltas.push(bidDelta);
-    dict[SYM].askDeltas.push(askDelta);
-
-    if (dict[SYM].bids.length > ((5 * 60 * Sec) / SLEEP_MS)) {
-        dict[SYM].asks.shift();
-        dict[SYM].bids.shift();
-        dict[SYM].bidDeltas.shift();
-        dict[SYM].askDeltas.shift();
-    }
-
-    // Test for day trading
-    var bidDeltaCount = recent(dict[SYM].bidDeltas);
-    if(bidDeltaCount > 10) {
-        if(dict[SYM].bear === false) {
-            ns.tprintf(`${(new Date()).toLocaleTimeString()},${SYM},BEAR,${bid}`);
-            dict[SYM].actionPrice = ns.stock.getBidPrice(SYM);
-
-            // Sell everything
-            ns.stock.sell(SYM, ns.stock.getPosition(SYM)[0]);
-        }
-
-        dict[SYM].bear = true;
-    }
-    else if(bidDeltaCount < -10) {
-        if(dict[SYM].bear === true) {
-            ns.tprintf(`${(new Date()).toLocaleTimeString()},${SYM},BULL,${ask}`);
-            dict[SYM].actionPrice = ns.stock.getAskPrice(SYM);
-
-            // Long only, no short.
-            var maxToSpend = Math.min(networth(ns) / 6, ns.getPlayer().money);
-            if(maxToSpend > 10_000_000) {
-                var sharesToBuy = Math.floor(maxToSpend / ns.stock.getAskPrice(SYM));
-                ns.stock.buy(SYM, sharesToBuy);
-            }
-        }
-        dict[SYM].bear = false;
-    }
-
-    var avgNow = (bid+ask) / 2;
-    var avgThen = (dict[SYM].asks[0] + dict[SYM].bids[0] ) / 2;
-    var deltaToNow = avgNow - avgThen;
-
-    ns.print(
-        pad(SYM, 6),
-        pad(dict[SYM].bear === true ? "BE  " : (dict[SYM].bear === false ? "  BU" : " -- "), 5),
-        pad(format(avgNow), 10),
-        pad(format(avgThen), 10),
-        pad(format(deltaToNow), 10),
-        pad(formatPercent((avgNow - dict[SYM].actionPrice) / dict[SYM].actionPrice), 10)
-        );
-}
-
-/**
- * 
- * @param {NS} ns 
- * @returns 
- */
-function networth(ns) {
-    return ns.getPlayer().money + ns.stock.getSymbols().map(sym => {
-        var pos = ns.stock.getPosition(sym);
-        var sum = pos[0] * pos[1];
-        return sum;
-    }).reduce((pv, v) => pv + v);
-}
-
-/**
- * 
- * @param {Array<number>} arr 
- * @returns {number} Net number of positive entries
- */
-export function recent(arr) {
-    var i = 0;
-    arr.forEach(v => {
-        if(v > 0) i++;
-        if(v < 0) i--;
-    });
-
-    return i;
 }

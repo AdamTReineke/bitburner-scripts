@@ -1,20 +1,32 @@
 /** @param {NS} ns **/
 export async function main(ns) {
+    function workout(stat) {
+            ns.gymWorkout("powerhouse gym", stat, true);
+            //ns.sleeve.setToGymWorkout(0, "powerhouse gym", stat);
+    }
+
+    var target = ns.args[0] || 100;
     while (true) {
         ns.stopAction();
+        ns.hacknet.spendHashes("Improve Gym Training");
 
-        if(ns.getPlayer().strength < 100) {
-            ns.gymWorkout("powerhouse gym", "strength", true);
+
+        if(ns.getPlayer().strength < target) {
+            workout("strength");
         }
-        else if (ns.getPlayer().defense < 100) {
-            ns.gymWorkout("powerhouse gym", "defense", true);
+        else if (ns.getPlayer().defense < target) {
+            workout("defense");
         }
-        else if (ns.getPlayer().dexterity < 100) {
-            ns.gymWorkout("powerhouse gym", "dexterity", true);
+        else if (ns.getPlayer().dexterity < target) {
+            workout("dexterity");
         }
-        else if (ns.getPlayer().agility < 100) {
-            ns.gymWorkout("powerhouse gym", "agility", true);
+        else if (ns.getPlayer().agility < target) {
+            workout("agility");
         } else {
+            ns.sleeve.setToCommitCrime(0, "mug");
+            if(ns.args[1] == "crime") {
+                ns.spawn("do-crime.js", 1);
+            }
             return;
         }
 

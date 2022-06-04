@@ -1,4 +1,4 @@
-import { buyPrograms } from './buy-programs';
+import { buyPrograms } from './buy-programs.js';
 import { univ } from "univ.js";
 
 /** @param {NS} ns **/

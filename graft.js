@@ -1,5 +1,6 @@
 /** @param {NS} ns **/
 export async function main(ns) {
+    ns.disableLog("sleep");
     ns.clearLog();
     /**
      * Dictionary of augments where the key is the augmentation name and the value is the factions that offer it.
@@ -9,38 +10,26 @@ export async function main(ns) {
     buildSet(ns, setOfAugments);
 
     // Filter to only unowned augments
-    if(ns.args.includes("unowned")) {
-        var pAug = ns.getOwnedAugmentations(true);
-        var owned = Object.keys(setOfAugments).filter(k => {
-            return pAug.includes(setOfAugments[k].name);
-        });
-        owned.forEach(augName => {
-            delete setOfAugments[augName];
-        });
-    }
+	var pAug = ns.getOwnedAugmentations(true);
+	var owned = Object.keys(setOfAugments).filter(k => {
+		return pAug.includes(setOfAugments[k].name);
+	});
+	owned.forEach(augName => {
+		delete setOfAugments[augName];
+	});
 
-    // Pull out the faction names
-    if(ns.args.includes("summary")) {
-        var factionDict = {};
-
-        Object.keys(setOfAugments).forEach(augName => {
-            setOfAugments[augName].factionName.forEach(factionName => {
-                if(factionDict[factionName]) {
-                    factionDict[factionName].push(augName);
-                }
-                else {
-                    factionDict[factionName] = [augName];
-                }
-            });
-        });
-
-        ns.print(JSON.stringify(factionDict, undefined, 2));
-    }
-
-    // Whole JSON object for debugging
-    if(ns.args.includes("JSON")) {
-        ns.print(JSON.stringify(setOfAugments, undefined, 2));
-    }
+	while(Object.keys(setOfAugments).length > 0) {
+		if(ns.isBusy()) {
+			await ns.sleep(10000);
+		}
+		else {
+			var augName = Object.keys(setOfAugments)[Math.floor(Math.random() * Object.keys(setOfAugments).length)];
+			if(ns.grafting.graftAugmentation(augName, true)) {
+				delete setOfAugments[augName];
+			}
+            await ns.sleep(500);
+		}
+	}
 }
 
 /**

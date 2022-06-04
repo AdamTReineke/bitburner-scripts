@@ -34,7 +34,7 @@ export async function main(ns) {
                 throw new Error(`Unable to purchase server with RAM ${nextRam}`);
             }
             else {
-                ns.run("deploy.js", 1, newServer, "core.js");
+                ns.run("deploy.js", 1, newServer, "jgn-dumb.js");
             }
         }
 

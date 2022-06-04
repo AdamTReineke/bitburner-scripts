@@ -1,7 +1,7 @@
 import { format, formatTime, pad } from "lib.js";
 
-var SAMPLE_SIZE = 60;
-var TICK_MS = 60 * 1000;
+var SAMPLE_SIZE = 60 * 4;
+var TICK_MS = 15 * 1000;
 
 /** @param {NS} ns **/
 export async function main(ns) {
@@ -54,8 +54,9 @@ export async function main(ns) {
 		// 	pad(formatTime(remainingMs), 14),
 		// );
 
-		ns.toast(`${formatTime(remainingMs)} until spend \$ ${format(goal)}`, "info", 59000);
-		ns.toast(`\$ ${format(moneyPerMs * 60 * 60 * 1000)} / h`, "info", 59000);
+		if(ns.args[0])
+			ns.toast(`${formatTime(remainingMs)} until spend \$ ${format(goal)}`, "info", TICK_MS - 250);
+		ns.toast(`\$ ${format(moneyPerMs * 60 * 60 * 1000)} / h`, "info", TICK_MS - 250);
 
 		ns.print(`\$ ${format(moneyPerMs * 60 * 60 * 1000)} / h, ${formatTime(remainingMs)} remaining`);
 

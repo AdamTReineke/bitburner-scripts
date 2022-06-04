@@ -19,8 +19,6 @@ function readable(n) {
         case 5: return "Incite";
     }
 }
-const PRIMARY_TYPE = "Contracts";
-const PRIMARY_NAME = "Tracking";
 
 /** @param {NS} ns **/
 function getOptions(ns) {
@@ -30,7 +28,9 @@ function getOptions(ns) {
             "Hyperdrive", // Each level of this skill increases the experience earned from Contracts, Operations, and BlackOps by 10%
             "Cyber's Edge", // Each level of this skill increases your max stamina by 2%
             "Blade's Intuition", // Each level of this skill increases your success chance for all Contracts, Operations, and BlackOps by 3%
-            "Tracer", // Each level of this skill increases your success chance in all Contracts by 4%,
+            //"Tracer", // Each level of this skill increases your success chance in all Contracts by 4%,
+            "Cloak", // Each level of this skill increases your success chance in stealth-related Contracts, Operations, and BlackOps by 5.5%
+            "Digital Observer", // Each level of this skill increases your success chance in all Operations and BlackOps by 4%
         ];
     }
     /*
@@ -113,6 +113,17 @@ function getNextState(ns, state) {
     //ns.print(JSON.stringify({shouldHeal, shouldRest, fullyHealed, fullyRested, isCityPeaceful, isCityCrazy }));
 
     // 3rd - Get more contracts if we need them. Stamina will regen during this.
+            let PRIMARY_TYPE;
+            let PRIMARY_NAME;
+            if(ns.bladeburner.getRank() < 30000) {
+                PRIMARY_TYPE = "Contracts";
+                PRIMARY_NAME = "Tracking";
+            }
+            else {
+                PRIMARY_TYPE = "Operation";
+                PRIMARY_NAME = "Sting Operation";
+            }
+
     var needContracts = ns.bladeburner.getActionCountRemaining(PRIMARY_TYPE, PRIMARY_NAME) < 5;
     if (needContracts) {
         return STATE.INCITE;
@@ -168,6 +179,16 @@ function changeState(ns, nextState) {
             ns.bladeburner.startAction("General", HEALING_OP);
             break;
         case STATE.CONTRACT:
+            let PRIMARY_TYPE;
+            let PRIMARY_NAME;
+            if(ns.bladeburner.getRank() < 30000) {
+                PRIMARY_TYPE = "Contracts";
+                PRIMARY_NAME = "Tracking";
+            }
+            else {
+                PRIMARY_TYPE = "Operation";
+                PRIMARY_NAME = "Sting Operation";
+            }
             ns.bladeburner.startAction(PRIMARY_TYPE, PRIMARY_NAME);
             return;
         case STATE.CALM:
@@ -246,7 +267,7 @@ function isInciting(ns) {
 function getChaosLimits(ns) {
     return {
         min: 1 * (getMinCombatSkill(ns) / 10),
-        max: 5 * (getMinCombatSkill(ns) / 10)
+        max: 3 * (getMinCombatSkill(ns) / 10)
     };
 }
 

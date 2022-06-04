@@ -1,11 +1,16 @@
 export function format(n) {
 	if(n === 0) return "";
 	function fixed(n) {
-		if(Math.abs(n) >= Math.pow(10, 15)) return (n / Math.pow(10,15)).toFixed(3) + " Q";
-		if(Math.abs(n) >= Math.pow(10, 12)) return (n / Math.pow(10,12)).toFixed(3) + " T";
-		if(Math.abs(n) >= Math.pow(10, 9))  return (n / Math.pow(10,9)).toFixed(3) + " B";
-		if(Math.abs(n) >= Math.pow(10, 6))  return (n / Math.pow(10,6)).toFixed(3) + " M";
-		if(Math.abs(n) >= Math.pow(10, 3))  return (n / Math.pow(10,3)).toFixed(3) + " K";
+		//const extraFormats = [1e15, 1e18, 1e21, 1e24, 1e27, 1e30];
+		//const extraNotations = ["q", "Q", "s", "S", "o", "n"];
+
+		if(Math.abs(n) >= Math.pow(10, 21)) return (n / Math.pow(10,21)).toFixed(3) + " s";
+		if(Math.abs(n) >= Math.pow(10, 18)) return (n / Math.pow(10,18)).toFixed(3) + " Q";
+		if(Math.abs(n) >= Math.pow(10, 15)) return (n / Math.pow(10,15)).toFixed(3) + " q";
+		if(Math.abs(n) >= Math.pow(10, 12)) return (n / Math.pow(10,12)).toFixed(3) + " t";
+		if(Math.abs(n) >= Math.pow(10, 9))  return (n / Math.pow(10,9)).toFixed(3) + " b";
+		if(Math.abs(n) >= Math.pow(10, 6))  return (n / Math.pow(10,6)).toFixed(3) + " m";
+		if(Math.abs(n) >= Math.pow(10, 3))  return (n / Math.pow(10,3)).toFixed(3) + " k";
 		return n.toFixed(3) + "  ";
 	}
 	var out = fixed(n);

@@ -1,3 +1,5 @@
+import { format } from "lib.js";
+
 /** @param {NS} ns **/
 export async function main(ns) {
 	var isVerbose = ns.args.indexOf("verbose") !== -1;
@@ -15,23 +17,30 @@ export async function main(ns) {
 
 
     while(true) {
-        var crimeOverSixty = "";
-        var chanceOverSixty = 1.0;
-        listOfCrimes.forEach(crime => {
-            var chance = ns.getCrimeChance(crime);
-            if(chance > 0.6 && chance <= chanceOverSixty) {
-                chanceOverSixty = chance;
-                crimeOverSixty = crime;
-            }
-        });
-
-        // Do Crime?
-        if (crimeOverSixty !== "") {
-            ns.commitCrime(crimeOverSixty);
+        if(ns.args[0]) {
+            ns.commitCrime(ns.args[0]);
         }
         else {
-            throw new Error("Not ready for crime. Get a job?");
+            var crimeOverSixty = "";
+            var chanceOverSixty = 1.0;
+            listOfCrimes.forEach(crime => {
+                var chance = ns.getCrimeChance(crime);
+                if(chance > 0.4 && chance <= chanceOverSixty) {
+                    chanceOverSixty = chance;
+                    crimeOverSixty = crime;
+                }
+            });
+
+            // Do Crime?
+            if (crimeOverSixty !== "") {
+                ns.commitCrime(crimeOverSixty);
+            }
+            else {
+                ns.commitCrime("mug someone");
+                //throw new Error("Not ready for crime. Get a job?");
+            }
         }
+        ns.print(`Karma: ${format(ns["heart"]["break"]())}`);
 
         
 

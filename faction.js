@@ -7,7 +7,7 @@ export async function main(ns) {
 
     // Instructions
     if (ns.args[0] === "help") {
-        ns.tprint(`Usage: run faction.js <FACTION> <JOB>`);
+        ns.tprint(`Usage: run faction.js <FACTION> <JOB> <REP>`);
         return;
     }
 
@@ -17,9 +17,16 @@ export async function main(ns) {
     const FACTION = "" + ns.args[0];
     const JOB = "" + (ns.args[1] || "Hacking Contracts");
 
+    if(ns.isBusy()) {
+        ns.print("Waiting for idle...");
+    }
+    while(ns.isBusy()) {
+        await ns.sleep(60000);
+    }
 
     var existingFavor = ns.getFactionFavor(FACTION);
     while(true) {
+
         var factionAugs = ns.getAugmentationsFromFaction(FACTION).filter(augName => {
             // only include unowned and unpurchased augments
             return ns.getOwnedAugmentations(true).indexOf(augName) === -1;
@@ -38,7 +45,7 @@ export async function main(ns) {
 
         var msg = `You will have ${format(augFavor)} favor with ${FACTION} after installing augments.\n`;
         msg += `You have ${augsLeft} to earn rep for. Most expensive is ${format(maxRep)} rep.`;
-        if(augFavor >= 150) {
+        if((ns.args[2] && ns.getFactionRep(FACTION) > ns.args[2]) || (ns.args[2] === undefined && augFavor >= 150) || augsLeft === 0) {
             ns.tprint(msg);
             break;
         }
@@ -51,6 +58,11 @@ export async function main(ns) {
         var before = ns.getFactionRep(FACTION);
         await ns.sleep(60000);
         ns.stopAction();
+        // factions block bladeburner from healing the player.
+        if(ns.getPlayer().hp < ns.getPlayer().max_hp / 2.2) {
+            ns.hospitalize();
+        }
+
 
         var after = ns.getFactionRep(FACTION);
         augFavor = ns.getFactionFavorGain(FACTION) + existingFavor;

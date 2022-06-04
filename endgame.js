@@ -9,6 +9,9 @@ export async function main(NS) {
     ns = NS;
 	ns.disableLog("sleep");
 
+	ns.print(`STAGE: -`);
+	ns.rm("stock.txt", "home");
+	ns.exec("market.js", "home", 1);
 	await trainAsync('hack', 100);
 	await deploy();
 
@@ -32,9 +35,7 @@ export async function main(NS) {
 	ns.joinFaction("Daedalus");
 	ns.workForFaction("Daedalus", "Hacking contracts", false);
 
-	ns.exec("server-upgrader.js", "home", 1, "100", "B");
-
-	ns.exec("market.js", "home", 1, "trade");
+	await buyServers("D", 2**20);
 
 	/*
 	while(ns.getFactionRep("Daedalus") < 2_500_000) {
@@ -129,7 +130,7 @@ async function deploy() {
 	}
 
 	// deploy.js will log for the deployment.
-	var pid = ns.run("deploy.js", 1);
+	var pid = ns.run("deploy.js", 1, "-f", "jgn.js");
 	if(pid > 0) {
 		return Promise.resolve(pid);
 	}
